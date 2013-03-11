@@ -23,12 +23,11 @@
 HIH61x::HIH61x(int _pin_active, unsigned long _refresh) {
     temp=0;
     hum=0;
+    hum_abs=0;
     status=0;
     pin_active = _pin_active;  
     time_fetch=0;
     refresh = _refresh;
-
-    
 }
 
 void HIH61x::init(void) {
