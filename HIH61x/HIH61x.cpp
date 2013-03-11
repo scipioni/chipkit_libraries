@@ -57,7 +57,7 @@ byte HIH61x::fetch(unsigned long now) {
     address = 0x27;
 
     if ((now - time_fetch) < refresh)
-        return 20;
+        return NOT_UPDATED;
 
     time_fetch = now;
 
@@ -72,12 +72,13 @@ byte HIH61x::fetch(unsigned long now) {
     delay(100);
 
     Wire.requestFrom((int)address, (int) 4);
-    if(4 <= Wire.available()) {
-        Hum_H = Wire.receive();
-        Hum_L = Wire.receive();
-        Temp_H = Wire.receive();
-        Temp_L = Wire.receive();
-    }
+    if(Wire.available() < 4)
+        return NOT_UPDATED;
+    
+    Hum_H = Wire.receive();
+    Hum_L = Wire.receive();
+    Temp_H = Wire.receive();
+    Temp_L = Wire.receive();
 
     status = (Hum_H >> 6) & 0x03;
     Hum_H = Hum_H & 0x3f;
@@ -87,12 +88,12 @@ byte HIH61x::fetch(unsigned long now) {
     hum = (float) H_dat * 6.10e-3;
     temp = (float) T_dat * 1.007e-2 - 40.0;
 
-    digitalWrite(pin_active, HIGH); // power off
-    DEBUG_PRINTLN(temp);
-
     /* absolute humidity g/m3 */
     pws=6.0964*pow(10, temp*7.33365/(temp+230.5));
     hum_abs = 2.16679*pws*hum/(100*(273.16+temp));
+    
+    digitalWrite(pin_active, HIGH); // power off
+    DEBUG_PRINTLN(temp);
 
     return status;
 }
