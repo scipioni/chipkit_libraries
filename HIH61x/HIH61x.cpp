@@ -7,8 +7,9 @@
 #include "WProgram.h"
 #include "HIH61x.h"
 #include <Wire.h> //I2C library
+#include <math.h>
 
-#define DEBUG 
+//#define DEBUG 
 
 #ifdef DEBUG
   #define DEBUG_PRINT(x)     Serial.print (x)
@@ -53,15 +54,15 @@ void HIH61x::init(void) {
 byte HIH61x::fetch(unsigned long now) {
     byte address, Hum_H, Hum_L, Temp_H, Temp_L;
     unsigned int H_dat, T_dat;
-    float pws;
+    float pwS;
     address = 0x27;
 
     if ((now - time_fetch) < refresh)
-        return 20;
+        return NOT_UPDATED;
 
     time_fetch = now;
 
-    digitalWrite(pin_active, LOW); // power on device
+    digitalWrite(pin_active, LOW); // power on sensor
     DEBUG_PRINT("setting low pin ");
     DEBUG_PRINTLN(pin_active);
     delay(100); // wait until device is active
@@ -72,12 +73,13 @@ byte HIH61x::fetch(unsigned long now) {
     delay(100);
 
     Wire.requestFrom((int)address, (int) 4);
-    if(4 <= Wire.available()) {
-        Hum_H = Wire.receive();
-        Hum_L = Wire.receive();
-        Temp_H = Wire.receive();
-        Temp_L = Wire.receive();
-    }
+    if(Wire.available() < 4)
+        return NOT_UPDATED;
+    
+    Hum_H = Wire.receive();
+    Hum_L = Wire.receive();
+    Temp_H = Wire.receive();
+    Temp_L = Wire.receive();
 
     status = (Hum_H >> 6) & 0x03;
     Hum_H = Hum_H & 0x3f;
@@ -86,18 +88,18 @@ byte HIH61x::fetch(unsigned long now) {
     T_dat = T_dat / 4;
     hum = (float) H_dat * 6.10e-3;
     temp = (float) T_dat * 1.007e-2 - 40.0;
-
-    digitalWrite(pin_active, HIGH); // power off
+    DEBUG_PRINT("temp:");
     DEBUG_PRINTLN(temp);
 
     /* absolute humidity g/m3 */
-    pws=6.0964*pow(10, temp*7.33365/(temp+230.5));
+    pwS=6.0964*powf(10.0, temp*7.33365/(temp+230.5));
     DEBUG_PRINT("pws:");
-    DEBUG_PRINTLN(pws);
-    hum_abs = 2.16679*pws*hum/(100*(273.16+temp));
+    DEBUG_PRINTLN(pwS);
+    hum_abs = 2.16679*pwS*hum/(100.0*(273.16+temp));
     DEBUG_PRINT("hum_abs:");
     DEBUG_PRINTLN(hum_abs);
-
+    
+    digitalWrite(pin_active, HIGH); // power off sensor
     return status;
 }
 

@@ -1,6 +1,8 @@
 #ifndef __HIH61x_H__
 #define __HIH61x_H__
 
+#define NOT_UPDATED 20
+
 #include "WProgram.h"
 
 class HIH61x {
