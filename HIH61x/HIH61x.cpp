@@ -8,7 +8,7 @@
 #include "HIH61x.h"
 #include <Wire.h> //I2C library
 
-//#define DEBUG 
+#define DEBUG 
 
 #ifdef DEBUG
   #define DEBUG_PRINT(x)     Serial.print (x)
@@ -92,7 +92,11 @@ byte HIH61x::fetch(unsigned long now) {
 
     /* absolute humidity g/m3 */
     pws=6.0964*pow(10, temp*7.33365/(temp+230.5));
+    DEBUG_PRINT("pws:");
+    DEBUG_PRINTLN(pws);
     hum_abs = 2.16679*pws*hum/(100*(273.16+temp));
+    DEBUG_PRINT("hum_abs:");
+    DEBUG_PRINTLN(hum_abs);
 
     return status;
 }
